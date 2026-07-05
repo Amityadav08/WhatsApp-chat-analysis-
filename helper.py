@@ -1,6 +1,5 @@
 
 import pandas as pd
-from soupsieve import select
 from urlextract import URLExtract
 from wordcloud import WordCloud
 from collections import Counter
@@ -18,21 +17,15 @@ def fetch_stats(selected_user,df):
 
     #fetch the total number of words
     words=[]
+    links=[]
     for message in df['message']:
         words.extend(message.split())
+        links.extend(extract.find_urls(message))
 
-        #fetch number of media messages
-        num_media_messages=df[df['message']=='<Media omitted>/n'].shape[0]
+    #fetch number of media messages
+    num_media_messages=df[df['message'].str.strip()=='<Media omitted>'].shape[0]
 
-        #fetch number of links shared
-
-        links=[]
-        for message in df['message']:
-            
-            
-            links.extend(extract.find_urls(message))
-
-        return num_messages,len(words),num_media_messages,len(links)
+    return num_messages,len(words),num_media_messages,len(links)
 
 def most_busy_users(df):
     x=df['user'].value_counts().head()
@@ -48,8 +41,8 @@ def create_wordcloud(selected_user,df):
 
     f=open('stop_hinglish.txt','r')
     stop_word=f.read()
-    temp=df[df['user']!='group_notification	']
-    temp=temp[temp['message']!= '<Media omitted>\n']
+    temp=df[df['user']!='group_notification']
+    temp=temp[temp['message'].str.strip()!='<Media omitted>']
 
     def remove_stop_words(message):
         y=[]
@@ -69,8 +62,8 @@ def create_wordcloud(selected_user,df):
 def most_common_words(selecte_user,df):
     f=open('stop_hinglish.txt','r')
     stop_word=f.read()
-    temp=df[df['user']!='group_notification	']
-    temp=temp[temp['message']!= '<Media omitted>\n']
+    temp=df[df['user']!='group_notification']
+    temp=temp[temp['message'].str.strip()!='<Media omitted>']
     words=[]
     for message in temp['message']:
         for word in message.lower().split():
@@ -89,7 +82,7 @@ def emoji_helper(selected_user,df):
     emojis=[]
 
     for message in df['message']:
-        emojis.extend([c for c in message if c in emoji.UNICODE_EMOJI['en']])
+        emojis.extend([c for c in message if emoji.is_emoji(c)])
 
     emoji_df=pd.DataFrame(Counter(emojis).most_common(len(Counter(emojis))))
 

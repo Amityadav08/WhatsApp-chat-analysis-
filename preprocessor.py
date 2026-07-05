@@ -19,9 +19,10 @@ def preprocess(data,data_is_12_24):
         dates_am=re.findall(pattern_am,data)
         df_pm=pd.DataFrame({'user_message':messages_pm,'message_date':dates_pm})
         df_am=pd.DataFrame({'user_message':messages_am,'message_date':dates_am})
-        df=df_am.append(df_pm,ignore_index=True)
+        df=pd.concat([df_am,df_pm],ignore_index=True)
         df['message_date']=df['message_date'].apply(lambda x: x[:-3])
-        df['message_date']=pd.to_datetime(df['message_date'],infer_datetime_format=True)
+        df['message_date']=pd.to_datetime(df['message_date'],format='mixed',dayfirst=True)
+        df=df.sort_values('message_date').reset_index(drop=True)
         
 
     users=[]
